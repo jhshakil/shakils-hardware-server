@@ -19,6 +19,7 @@ async function run() {
         await client.connect();
         const productCollection = client.db('shakilsHardware').collection('products');
         const reviewCollection = client.db('shakilsHardware').collection('reviews');
+        const orderCollection = client.db('shakilsHardware').collection('orders');
 
         app.get('/product', async (req, res) => {
             const query = {};
@@ -36,6 +37,12 @@ async function run() {
             const query = {};
             const review = await reviewCollection.find(query).toArray();
             res.send(review);
+        })
+
+        app.post('/order', async (req, res) => {
+            const data = req.body;
+            const order = await orderCollection.insertOne(data)
+            res.send(order);
         })
     }
     finally {
