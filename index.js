@@ -39,10 +39,24 @@ async function run() {
             res.send(review);
         })
 
+        app.get('/myOrder', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const myOrder = await orderCollection.find(query).toArray();
+            res.send(myOrder);
+        })
+
         app.post('/order', async (req, res) => {
             const data = req.body;
             const order = await orderCollection.insertOne(data)
             res.send(order);
+        })
+
+        app.delete('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const deleted = await orderCollection.deleteOne(query);
+            res.send(deleted);
         })
     }
     finally {
