@@ -85,6 +85,7 @@ async function run() {
             const options = { upsert: true };
             const updateDoc = {
                 $set: {
+                    name: updateData.name,
                     location: updateData.location,
                     education: updateData.education,
                     linkedin: updateData.linkedin,
