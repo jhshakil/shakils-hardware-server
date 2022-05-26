@@ -15,6 +15,22 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORd}@cluster0.uz8kq.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyToken(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ massage: 'Unauthorize access' });
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ massage: 'Forbidden access' });
+        }
+        req.decoded = decoded;
+        next();
+    });
+
+}
+
 async function run() {
     try {
         await client.connect();
@@ -42,18 +58,23 @@ async function run() {
             res.send(review);
         })
 
-        app.get('/myOrder', async (req, res) => {
+        app.get('/myOrder', verifyToken, async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const myOrder = await orderCollection.find(query).toArray();
             res.send(myOrder);
         })
-        app.get('/order', async (req, res) => {
+        app.get('/order', verifyToken, async (req, res) => {
             const query = {};
             const myOrder = await orderCollection.find(query).toArray();
             res.send(myOrder);
         })
-        app.get('/profile', async (req, res) => {
+        app.get('/user', verifyToken, async (req, res) => {
+            const query = {};
+            const myOrder = await userCollection.find(query).toArray();
+            res.send(myOrder);
+        })
+        app.get('/profile', verifyToken, async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
             const profile = await profileCollection.findOne(query);
@@ -156,6 +177,16 @@ async function run() {
             const result = await userCollection.updateOne(query, updateDoc, option);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, { expiresIn: '365d' })
             res.send({ result, token });
+        })
+
+        app.put('/user/admin/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' }
+            }
+            const result = await userCollection.updateOne(query, updateDoc);
+            return res.send(result);
         })
 
         app.delete('/order/:id', async (req, res) => {
