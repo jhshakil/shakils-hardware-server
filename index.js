@@ -46,6 +46,11 @@ async function run() {
             const myOrder = await orderCollection.find(query).toArray();
             res.send(myOrder);
         })
+        app.get('/order', async (req, res) => {
+            const query = {};
+            const myOrder = await orderCollection.find(query).toArray();
+            res.send(myOrder);
+        })
         app.get('/profile', async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
@@ -62,6 +67,11 @@ async function run() {
         app.post('/review', async (req, res) => {
             const allData = req.body;
             const review = await reviewCollection.insertOne(allData);
+            res.send(review);
+        })
+        app.post('/product', async (req, res) => {
+            const allData = req.body;
+            const review = await productCollection.insertOne(allData);
             res.send(review);
         })
 
