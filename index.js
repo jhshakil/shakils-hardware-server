@@ -40,6 +40,16 @@ async function run() {
         const profileCollection = client.db('shakilsHardware').collection('profiles');
         const userCollection = client.db('shakilsHardware').collection('users');
 
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requestAccount = await userCollection.findOne({ email: requester });
+            if (requestAccount.role === 'admin') {
+                next();
+            } else {
+                return res.status(403).send({ massage: 'Forbidden access' });
+            }
+        }
+
         app.get('/product', async (req, res) => {
             const query = {};
             const product = await productCollection.find(query).toArray();
@@ -79,6 +89,13 @@ async function run() {
             const query = { email: email };
             const profile = await profileCollection.findOne(query);
             res.send(profile)
+        })
+
+        app.get('/admin/:email', verifyToken, async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
         })
 
         app.post('/order', async (req, res) => {
@@ -179,7 +196,7 @@ async function run() {
             res.send({ result, token });
         })
 
-        app.put('/user/admin/:email', verifyToken, async (req, res) => {
+        app.put('/user/admin/:email', verifyToken, verifyAdmin, async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const updateDoc = {
