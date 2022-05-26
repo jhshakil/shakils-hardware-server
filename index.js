@@ -21,6 +21,7 @@ async function run() {
         const reviewCollection = client.db('shakilsHardware').collection('reviews');
         const orderCollection = client.db('shakilsHardware').collection('orders');
         const profileCollection = client.db('shakilsHardware').collection('profiles');
+        const userCollection = client.db('shakilsHardware').collection('users');
 
         app.get('/product', async (req, res) => {
             const query = {};
@@ -94,6 +95,23 @@ async function run() {
             const result = await productCollection.updateOne(query, updateDoc, options);
             res.send(result)
         })
+        app.put('/editProduct/:id', async (req, res) => {
+            const id = req.params.id;
+            const updateData = req.body;
+            const query = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    name: updateData.name,
+                    description: updateData.description,
+                    minOrder: updateData.minOrder,
+                    quantity: updateData.quantity,
+                    price: updateData.price
+                }
+            }
+            const result = await productCollection.updateOne(query, updateDoc, options);
+            res.send(result)
+        })
         app.put('/profile/:email', async (req, res) => {
             const email = req.params.email;
             const updateData = req.body;
@@ -126,10 +144,28 @@ async function run() {
             res.send(result)
         })
 
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const query = { email: email };
+            const option = { upsert: true };
+            const updateDoc = {
+                $set: user
+            }
+            const result = await userCollection.updateOne(query, updateDoc, option);
+            res.send(result);
+        })
+
         app.delete('/order/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const deleted = await orderCollection.deleteOne(query);
+            res.send(deleted);
+        })
+        app.delete('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const deleted = await productCollection.deleteOne(query);
             res.send(deleted);
         })
     }
