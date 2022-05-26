@@ -59,6 +59,12 @@ async function run() {
             res.send(order);
         })
 
+        app.post('/review', async (req, res) => {
+            const allData = req.body;
+            const review = await reviewCollection.insertOne(allData);
+            res.send(review);
+        })
+
         app.post('/profile', async (req, res) => {
             const allData = req.body;
             const profile = await profileCollection.insertOne(allData);
@@ -90,6 +96,20 @@ async function run() {
                     education: updateData.education,
                     linkedin: updateData.linkedin,
                     number: updateData.number
+                }
+            }
+            const result = await profileCollection.updateOne(query, updateDoc, options);
+            res.send(result)
+        })
+
+        app.put('/picture/:email', async (req, res) => {
+            const email = req.params.email;
+            const updateData = req.body;
+            const query = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    img: updateData.img,
                 }
             }
             const result = await profileCollection.updateOne(query, updateDoc, options);
