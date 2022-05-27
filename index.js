@@ -227,7 +227,7 @@ run().catch(console.dir)
 
 
 app.get('/', (req, res) => {
-    res.send('Hello World!')
+    res.send('This is Shakils Hardware')
 })
 
 app.listen(port, () => {
