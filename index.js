@@ -226,7 +226,7 @@ run().catch(console.dir)
 
 
 app.get('/', (req, res) => {
-    res.send('This is Shakils Hardware')
+    res.send('Test')
 })
 
 app.listen(port, () => {
