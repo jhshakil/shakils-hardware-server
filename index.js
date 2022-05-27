@@ -3,6 +3,7 @@ const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_KEY);
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -41,6 +42,7 @@ async function run() {
         const orderCollection = client.db('shakilsHardware').collection('orders');
         const profileCollection = client.db('shakilsHardware').collection('profiles');
         const userCollection = client.db('shakilsHardware').collection('users');
+        const paymentCollection = client.db('shakilsHardware').collection('payments');
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -79,6 +81,12 @@ async function run() {
         app.get('/order', verifyToken, async (req, res) => {
             const query = {};
             const myOrder = await orderCollection.find(query).toArray();
+            res.send(myOrder);
+        })
+        app.get('/order/:id', verifyToken, async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) };
+            const myOrder = await orderCollection.findOne(query);
             res.send(myOrder);
         })
         app.get('/user', verifyToken, async (req, res) => {
@@ -121,6 +129,20 @@ async function run() {
             const allData = req.body;
             const profile = await profileCollection.insertOne(allData);
             res.send(profile);
+        })
+
+        app.post('/create-payment-intent', verifyToken, async (req, res) => {
+            const service = req.body;
+            const price = service.totalPrice;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ['card']
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            });
         })
 
         app.put('/product/:id', async (req, res) => {
@@ -208,6 +230,21 @@ async function run() {
             return res.send(result);
         })
 
+        app.patch('/order/:id', async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const query = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const result = await paymentCollection.insertOne(payment)
+            const updateOrder = await orderCollection.updateOne(query, updateDoc)
+            res.send(updateDoc)
+        })
+
         app.delete('/order/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -229,7 +266,7 @@ run().catch(console.dir)
 
 
 app.get('/', (req, res) => {
-    res.send('Test')
+    res.send('Shakils Hardware')
 })
 
 app.listen(port, () => {
