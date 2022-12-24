@@ -57,6 +57,7 @@ async function run() {
         app.get('/product', async (req, res) => {
             const query = {};
             const product = await productCollection.find(query).toArray();
+            // res.send('test');
             res.send(product);
         })
         app.get('/product/:id', async (req, res) => {
